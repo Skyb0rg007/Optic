@@ -1,0 +1,54 @@
+name:                optic-lang
+version:             0.1.0.0
+github:              "Skyb0rg007/optic-lang"
+license:             BSD3
+author:              "Skye Soss"
+maintainer:          "skyler.soss@gmail.com"
+copyright:           "2019 Skye Soss"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+synopsis:            Programming language with first-class lenses
+category:            Compilers/Interpreters
+
+description: Please see the README on GitHub at <https://github.com/Skyb0rg007/optic-lang#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- containers
+- lens
+- megaparsec
+- mtl
+- parser-combinators
+- text
+- unbound-generics
+- prettyprinter
+
+library:
+  source-dirs: src
+
+executables:
+  optic-lang-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - optic-lang
+
+tests:
+  optic-lang-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hspec
+    - silently
+    - optic-lang
