@@ -1,16 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Optic.Parser where
+module OpticUnbound.Parser where
 
-import           Data.List.NonEmpty         (NonEmpty ((:|)))
-import           Data.Text                  (Text)
-import qualified Data.Text                  as T
-import           Data.Void                  (Void)
+import           Data.List.NonEmpty               (NonEmpty ((:|)))
+import qualified Data.List.NonEmpty               as NonEmpty
+import           Data.Text                        (Text)
+import qualified Data.Text                        as T
+import           Data.Void                        (Void)
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
+import qualified Text.Megaparsec.Char.Lexer       as L
+import           Unbound.Generics.LocallyNameless
 
-import           Optic.AST
+import           OpticUnbound.AST
 
 -- No custom errors
 type Parser = Parsec Void Text
@@ -56,12 +58,11 @@ reserved = ["if", "then", "else", "let", "in", "effect", "case", "end"]
 --  Function application if terms are in a list
 --  Sequencing if separated with ';' - syntax sugar over let _ = e1 in e2
 parseExpr :: Parser OpticExpr
-parseExpr =
-        wrapSequence <$> parseApp `sepEndBy1` symbol ";"
+parseExpr = wrapSequence <$> parseApp `sepEndBy1` symbol ";"
     where
         wrapSequence []     = error "This cannot happen"
         wrapSequence [e]    = e
-        wrapSequence (e:es) = Let "_" e (wrapSequence es)
+        wrapSequence (e:es) = Let (bind (rec (s2n "_", Embed e)) (wrapSequence es))
         parseApp = foldl1 App <$> some parseTerm
 
 -- A pattern is:
@@ -69,7 +70,7 @@ parseExpr =
 --  A constructor followed by constructors/patterns
 parsePattern :: Parser OpticPattern
 parsePattern =
-        parseCon
+        try parseCon
     <|> parsePatternTerm
     where
         parseCon = label "constructor" $ PatCon <$> constructor <*> some parsePatternTerm
@@ -82,10 +83,10 @@ parsePatternTerm :: Parser OpticPattern
 parsePatternTerm =
         parseVar
     <|> parseCon
-    <|> PatLit <$> parseLit
     <|> parseParen
+    <|> PatLit <$> parseLit
     where
-        parseVar = label "variable" $ PatVar <$> identifier
+        parseVar = label "variable" $ PatVar . s2n . T.unpack <$> identifier
         parseCon = label "unary constructor" $ PatCon <$> constructor <*> pure []
         parseParen = between (symbol "(") (symbol ")") parsePattern
 
@@ -100,12 +101,12 @@ parseTerm :: Parser OpticExpr
 parseTerm =
         try parseVar
     <|> try parseParen
+    <|> try parseLet
+    <|> try parseLam
+    <|> try parseCase
     <|> Literal <$> parseLit
-    <|> parseLet
-    <|> parseLam
-    <|> parseCase
     where
-        parseVar = label "variable" $ Var <$> identifier
+        parseVar = label "variable" $ Var . s2n . T.unpack <$> identifier
         parseParen = between (symbol "(") (symbol ")") parseExpr
         parseLet = label "let" $ do
             _ <- symbol "let"
@@ -113,30 +114,30 @@ parseTerm =
             _ <- symbol "="
             e1 <- parseExpr
             _ <- symbol "in"
-            Let x e1 <$> parseExpr
+            Let . bind (rec (s2n $ T.unpack x, Embed e1)) <$> parseExpr
         parseLam = label "lambda" $ do
             _ <- symbol "\\"
             x <- identifier
             _ <- symbol "->"
-            Lambda x <$> parseExpr
+            Lambda . bind (s2n $ T.unpack x) <$> parseExpr
         parseCase = label "case" $ do
             _ <- symbol "case"
             e <- parseExpr
-            c:cs <- some (try parseEffExpr <|> parseCaseExpr)
+            cs <- some (try parseEffExpr <|> parseCaseExpr)
             _ <- symbol "end"
-            pure $ Case e (c:|cs)
+            pure $ Case e (NonEmpty.fromList cs)
         parseCaseExpr = label "case expr" $ do
             _ <- symbol "|"
             p <- parsePattern
             _ <- symbol "->"
-            CaseMatch p <$> parseExpr
+            CaseMatch . bind p <$> parseExpr
         parseEffExpr = label "eff expr" $ do
             _ <- symbol "|"
             _ <- symbol "effect"
             p <- parsePatternTerm
             k <- identifier
             _ <- symbol "->"
-            CaseEff p k <$> parseExpr
+            CaseEff . bind (p, s2n $ T.unpack k) <$> parseExpr
 
 -- A literal is:
 --  An integer

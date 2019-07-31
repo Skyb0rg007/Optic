@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingStrategies    #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -5,6 +6,7 @@
 
 module Unbound.Generics.Orphans () where
 
+import           Data.List.NonEmpty               (NonEmpty)
 import           Data.Text                        (Text)
 import           Unbound.Generics.LocallyNameless (Alpha (..), Subst (..))
 
@@ -26,3 +28,8 @@ instance Subst b Text where
     isvar _ = Nothing
     subst _ _ = id
     substs _ = id
+
+-- NonEmpty
+instance Alpha a => Alpha (NonEmpty a)
+instance Subst c a => Subst c (NonEmpty a)
+

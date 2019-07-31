@@ -2,26 +2,21 @@
 
 module Optic.Prelude where
 
-import           Control.Monad.Except
-import           Data.Text                        (Text)
-import qualified Data.Text                        as T
-import           Data.Text.Prettyprint.Doc        (pretty)
-import           Unbound.Generics.LocallyNameless
+import           Control.Monad.IO.Class    (MonadIO, liftIO)
+import qualified Data.Map                  as Map
+import           Data.Text                 (Text)
+import           Data.Text.Prettyprint.Doc (pretty)
 
-import           Optic.AST
-import           Optic.Evaluate
+import           Optic.AST                 (OpticExpr (..), OpticLit (..),
+                                            OpticPrim (..))
+import           Optic.Evaluate            (Environ)
 
-optEvalWithEnv :: [OpticPrim] -> OpticExpr -> IO (Either Text OpticExpr)
-optEvalWithEnv [] expr = optEval expr
-optEvalWithEnv (prim@(OpticPrim name fn) : rest) expr =
-    optEvalWithEnv rest (optLet name (Primitive prim) expr)
+optPrint :: MonadIO m => OpticExpr -> m OpticExpr
+optPrint exp = Literal LitUnit <$ liftIO (print $ pretty exp)
 
-optPrelude :: [OpticPrim]
-optPrelude = [optSucc, optPrint]
-
-optSucc = let succ' (Literal (LitInt n)) = pure $ Literal $ LitInt $ n + 1
-              succ' _                    = throwError "succ: wrong argument"
-           in OpticPrim "succ" succ'
-
-optPrint = let print' exp = optLitBool True <$ print (pretty exp)
-            in OpticPrim "print" (liftIO . print')
+optPrelude :: Environ
+optPrelude = Map.fromList
+    [ ("print", Primitive $ OpticPrim "print" optPrint)
+    , ("nil", DataType "Nil" [])
+    , ("cons", Lambda "x" $ Lambda "xs" $ DataType "Cons" [Var "x", Var "xs"])
+    ]
