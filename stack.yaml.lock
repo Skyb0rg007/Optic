@@ -3,10 +3,70 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    size: 11452809
+    subdir: grin
+    url: https://github.com/Skyb0rg007/grin/archive/d234d9493514cdeabadad72c41cd185eb1142cec.tar.gz
+    cabal-file:
+      size: 10192
+      sha256: fa0c3f2515b734e1bb8fbbc58763341f5212df04fcba4772c637e6c4257dcb6f
+    name: grin
+    version: 0.1.0.0
+    sha256: 5c1c9e748bb97b58fe5977d37287b6c394ca5c91734d3f3777761eee578f0835
+    pantry-tree:
+      size: 20265
+      sha256: 42faef299ff171a3eeb96b430d5d00e65fede3b95fb652ee8c8f1476ec1f7275
+  original:
+    size: 11452809
+    subdir: grin
+    url: https://github.com/Skyb0rg007/grin/archive/d234d9493514cdeabadad72c41cd185eb1142cec.tar.gz
+    sha256: 5c1c9e748bb97b58fe5977d37287b6c394ca5c91734d3f3777761eee578f0835
+- completed:
+    hackage: functor-infix-0.0.5@sha256:cea21a321031f556d7a21b51e049493e7cb78baf64dd63f0d1a36de01c4c735b,661
+    pantry-tree:
+      size: 367
+      sha256: 04de43014229a582ba4aeff75a3e065cdba4d550a05af36a459fa38b685640b7
+  original:
+    hackage: functor-infix-0.0.5@sha256:cea21a321031f556d7a21b51e049493e7cb78baf64dd63f0d1a36de01c4c735b,661
+- completed:
+    hackage: llvm-hs-7.0.1@sha256:8a90dec95be46ce24edfc53f357abfb692e6d531f5108fbba795c0ab2d93be5b,8879
+    pantry-tree:
+      size: 13394
+      sha256: 7edf2ec9d9cf2eb34ffa3cb5a9f65addf7cc547ed1d9eee9eb1515200a37990d
+  original:
+    hackage: llvm-hs-7.0.1@sha256:8a90dec95be46ce24edfc53f357abfb692e6d531f5108fbba795c0ab2d93be5b,8879
+- completed:
+    hackage: llvm-hs-pretty-0.6.1.0@sha256:54785b205bc9a267513b539eb8073f9f576e01da196720871bc894520e712e16,1670
+    pantry-tree:
+      size: 4741
+      sha256: 09128cc6ff572c3c544de01ee2b683cdc356d606a5829f1c60966593ff2f59db
+  original:
+    hackage: llvm-hs-pretty-0.6.1.0@sha256:54785b205bc9a267513b539eb8073f9f576e01da196720871bc894520e712e16,1670
+- completed:
+    hackage: llvm-hs-pure-7.0.0@sha256:054c145a345bccdad6205420832eae36e3ed4730fad9767fb153d4487d240727,2931
+    pantry-tree:
+      size: 2600
+      sha256: 11e9eb61035f203f0d037358bef49fc885d8a25045dc1080f7b6b1695c92325b
+  original:
+    hackage: llvm-hs-pure-7.0.0@sha256:054c145a345bccdad6205420832eae36e3ed4730fad9767fb153d4487d240727,2931
+- completed:
+    hackage: monad-gen-0.3.0.1@sha256:a2569465cfbd468d3350ef25de56b3362580e77537224313aab1210f40804a3b,821
+    pantry-tree:
+      size: 288
+      sha256: a825dc8dcc3ee27dbbc1b71f6853703790ed320249b8f8510bb36d726664e795
+  original:
+    hackage: monad-gen-0.3.0.1@sha256:a2569465cfbd468d3350ef25de56b3362580e77537224313aab1210f40804a3b,821
+- completed:
+    hackage: set-extra-1.4.1@sha256:c58aa620704f609f289953e7c1f9c1653fd1498f0984b0f03a3f8f38f7ed5a84,533
+    pantry-tree:
+      size: 268
+      sha256: 3b6f94160b9d868f341d841de0e3e9f354ae90b5817b171e2bb68fd67cf2790c
+  original:
+    hackage: set-extra-1.4.1@sha256:c58aa620704f609f289953e7c1f9c1653fd1498f0984b0f03a3f8f38f7ed5a84,533
 snapshots:
 - completed:
-    size: 500539
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/27.yaml
-    sha256: 690db832392afe55733b4c7023fd29b1b1c660ee42f1fb505b86b07394ca994e
-  original: lts-13.27
+    size: 523443
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/0.yaml
+    sha256: 283773e7120f5446d961eab35ea95c9af9c24187cc178537bd29273200a05171
+  original: lts-14.0

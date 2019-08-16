@@ -1,3 +1,19 @@
-resolver: lts-13.27
+resolver: lts-14.0
 packages:
 - .
+
+extra-deps:
+# Custom grin using lts-14.0 and an updated megaparsec version
+- github: Skyb0rg007/grin
+  commit: d234d9493514cdeabadad72c41cd185eb1142cec
+  size:   11452809
+  sha256: 5c1c9e748bb97b58fe5977d37287b6c394ca5c91734d3f3777761eee578f0835
+  subdirs:
+  - grin
+- functor-infix-0.0.5@sha256:cea21a321031f556d7a21b51e049493e7cb78baf64dd63f0d1a36de01c4c735b,661
+- llvm-hs-7.0.1@sha256:8a90dec95be46ce24edfc53f357abfb692e6d531f5108fbba795c0ab2d93be5b,8879
+- llvm-hs-pretty-0.6.1.0@sha256:54785b205bc9a267513b539eb8073f9f576e01da196720871bc894520e712e16,1670
+- llvm-hs-pure-7.0.0@sha256:054c145a345bccdad6205420832eae36e3ed4730fad9767fb153d4487d240727,2931
+- monad-gen-0.3.0.1@sha256:a2569465cfbd468d3350ef25de56b3362580e77537224313aab1210f40804a3b,821
+- set-extra-1.4.1@sha256:c58aa620704f609f289953e7c1f9c1653fd1498f0984b0f03a3f8f38f7ed5a84,533
+

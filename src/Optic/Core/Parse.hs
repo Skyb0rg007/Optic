@@ -1,8 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Optic.Parser where
+module Optic.Core.Parse
+    ( parseExpr
+    ) where
 
-import           Data.List.NonEmpty         (NonEmpty ((:|)))
+import           Bound
+import           Data.List                  (elemIndex)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import           Data.Void                  (Void)
@@ -10,7 +13,7 @@ import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import           Optic.AST
+import           Optic.Core.Expr
 
 -- No custom errors
 type Parser = Parsec Void Text
@@ -43,100 +46,73 @@ identifier = lexeme $ do
        then pure ident
        else fail $ T.unpack ident ++ " is a reserved word"
 
-constructor :: Parser Text
-constructor = lexeme $
-    fmap T.pack $ (:) <$> upperChar <*> many (alphaNumChar <|> char '_')
-
 reserved :: [Text]
 reserved = ["if", "then", "else", "let", "in", "effect", "case", "end"]
 
+constructor :: Parser Int
+constructor = between (symbol "<") (symbol ">") intLiteral
+
 ---
 
--- An expression is:
---  Function application if terms are in a list
---  Sequencing if separated with ';' - syntax sugar over let _ = e1 in e2
-parseExpr :: Parser OpticExpr
-parseExpr =
-        wrapSequence <$> parseApp `sepEndBy1` symbol ";"
-    where
-        wrapSequence []     = error "This cannot happen"
-        wrapSequence [e]    = e
-        wrapSequence (e:es) = Let "_" e (wrapSequence es)
-        parseApp = foldl1 App <$> some parseTerm
+parseExpr :: Parser (OpticExpr Text)
+parseExpr = foldl1 App <$> some parseTerm
 
--- A pattern is:
---  A variable
---  A constructor followed by constructors/patterns
-parsePattern :: Parser OpticPattern
-parsePattern =
-        parseCon
-    <|> parsePatternTerm
-    where
-        parseCon = label "constructor" $ PatCon <$> constructor <*> some parsePatternTerm
-
--- A pattern term is:
---  A variable
---  A unary constructor
---  A patrenthesized pattern
-parsePatternTerm :: Parser OpticPattern
-parsePatternTerm =
-        parseVar
-    <|> parseCon
-    <|> PatLit <$> parseLit
-    <|> parseParen
-    where
-        parseVar = label "variable" $ PatVar <$> identifier
-        parseCon = label "unary constructor" $ PatCon <$> constructor <*> pure []
-        parseParen = between (symbol "(") (symbol ")") parsePattern
-
--- A term is:
---  A variable
---  A parenthesized expression
---  A literal
---  A let expression
---  A lambda expression
---  A case expression
-parseTerm :: Parser OpticExpr
+parseTerm :: Parser (OpticExpr Text)
 parseTerm =
         try parseVar
     <|> try parseParen
+    <|> try parseLet
+    <|> try parseLam
+    <|> try parseCase
     <|> Literal <$> parseLit
-    <|> parseLet
-    <|> parseLam
-    <|> parseCase
     where
         parseVar = label "variable" $ Var <$> identifier
         parseParen = between (symbol "(") (symbol ")") parseExpr
         parseLet = label "let" $ do
             _ <- symbol "let"
+            lines <- parseLetLine `sepEndBy1` symbol ";"
+            _ <- symbol "in"
+            let_ lines <$> parseExpr
+        parseLetLine = label "let line" $ do
             x <- identifier
             _ <- symbol "="
-            e1 <- parseExpr
-            _ <- symbol "in"
-            Let x e1 <$> parseExpr
+            e <- parseExpr
+            pure (x, e)
         parseLam = label "lambda" $ do
             _ <- symbol "\\"
             x <- identifier
             _ <- symbol "->"
-            Lambda x <$> parseExpr
+            lam x <$> parseExpr
         parseCase = label "case" $ do
             _ <- symbol "case"
             e <- parseExpr
-            c:cs <- some (try parseEffExpr <|> parseCaseExpr)
+            cases <- some parseCaseExpr
             _ <- symbol "end"
-            pure $ Case e (c:|cs)
-        parseCaseExpr = label "case expr" $ do
+            pure $ Case e cases
+        parseCaseExpr = try parseCaseMatchExpr <|> parseCaseVarExpr
+        parseCaseMatchExpr :: Parser (OpticPat, Scope Int OpticExpr Text)
+        parseCaseMatchExpr = label "case expr" $ do
             _ <- symbol "|"
-            p <- parsePattern
+            c <- constructor
+            args <- many identifier
             _ <- symbol "->"
-            CaseMatch p <$> parseExpr
-        parseEffExpr = label "eff expr" $ do
+            e <- parseExpr
+            let abstr :: Text -> Maybe Int
+                abstr "_" = Nothing
+                abstr v   = elemIndex v args
+            pure (PatConstructor c (length args), abstract abstr e)
+        parseCaseVarExpr :: Parser (OpticPat, Scope Int OpticExpr Text)
+        parseCaseVarExpr = label "case var" $ do
             _ <- symbol "|"
-            _ <- symbol "effect"
-            p <- parsePatternTerm
-            k <- identifier
+            ident <- identifier
             _ <- symbol "->"
-            CaseEff p k <$> parseExpr
+            e <- parseExpr
+            let abstr :: Text -> Maybe Int
+                abstr "_" = Nothing
+                abstr _   = Just 0
+            pure (PatVariable, abstract abstr e)
+
+
 
 -- A literal is:
 --  An integer
@@ -156,6 +132,6 @@ parseLit =
         parseBool = label "bool" $
                 LitBool True  <$ symbol "True"
             <|> LitBool False <$ symbol "False"
-        parseText = label "text" $ LitText <$> stringLiteral
+        parseText = label "text" $ LitString <$> stringLiteral
         parseChar = label "char" $ LitChar <$> charLiteral
         parseUnit = label "unit" $ LitUnit <$ symbol "()"

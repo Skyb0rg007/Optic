@@ -3,7 +3,7 @@ version:             0.1.0.0
 github:              "Skyb0rg007/optic-lang"
 license:             BSD3
 author:              "Skye Soss"
-maintainer:          "skyler.soss@gmail.com"
+maintainer:          "Skye Soss <skyler.soss@gmail.com>"
 copyright:           "2019 Skye Soss"
 
 extra-source-files:
@@ -15,16 +15,27 @@ category:            Compilers/Interpreters
 
 description: Please see the README on GitHub at <https://github.com/Skyb0rg007/optic-lang#readme>
 
+ghc-options:
+- -Wall
+- -Wcompat
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wredundant-constraints
+
 dependencies:
 - base >= 4.7 && < 5
+- bound
+- bytestring
 - containers
+- deepseq
+- grin
 - lens
 - megaparsec
 - mtl
 - parser-combinators
-- text
-- unbound-generics
 - prettyprinter
+- text
+- transformers-compat
 
 library:
   source-dirs: src
